@@ -27,9 +27,11 @@ app.post('/Subscribe',function(req,res){
 			accs.client.disconnect(); //disconnect existing connection
 		}
 		
-		if(req.body.Name != ''){
+		if(req.body.Name != '' && req.body.fields != null){
 			console.log("Subscribing to push topic : "+ req.body.Name);
-				
+
+			sfdc.SaveFieldMapping(req.body.fields);
+			
 		    //Subscribe to Salesforce api
 			org.authenticate({ username: config.SFDC_USERNAME, password: config.SFDC_PASSWORD, securityToken: config.SFDC_SECURITYTOKEN }, function(err, resp) {
 			
@@ -48,6 +50,7 @@ app.post('/Subscribe',function(req,res){
 			
 			accs.on('data', function(data) {
 				console.log(data);
+				sfdc.process(data);
 			});
 			
 			});
@@ -59,7 +62,7 @@ app.post('/Subscribe',function(req,res){
 
 app.post('/test',function(req,res){
 
-		sfdc.process(req.body)
+		sfdc.process(req.body);
 		//Subscribe to Salesforce api
 		
 	}
