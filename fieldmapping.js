@@ -18,10 +18,12 @@ var StdFieldInternalToRestFieldMap = {
 	};
 
 var fields = {};
-	
+
+var customFields = {};
+
 exports.StdFieldInternalToRestFieldMap = StdFieldInternalToRestFieldMap;
 exports.fields = fields;
-
+exports.customFields = customFields;
 
 
 

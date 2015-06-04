@@ -5,6 +5,22 @@ var fieldmapping = require('./fieldmapping.js');
 
 var SaveFieldMapping = function(fields){
 	fieldmapping.fields = fields;
+	var authenticationHeader = "Basic " + new Buffer(config.ELOQUA_USERNAME + ":" + config.ELOQUA_PASSWORD).toString("base64"); 
+	request(
+		{
+			url: config.ELOQUA_URL + '/api/rest/2.0/assets/contact/fields?depth=complete',
+			headers: {"Authorization" : authenticationHeader }
+		},
+		function(error,response,body){
+		var b = JSON.parse(body);
+		
+		for(var i=0; i<b.elements.length; i++)
+		{
+			var ele = b.elements[i];
+			if (!(ele.internalName in fieldmapping.StdFieldInternalToRestFieldMap))
+				fieldmapping.customFields[ele.internalName] = ele.id;
+		}		
+	});
 }
 
 var process = function (contactData){
@@ -66,9 +82,6 @@ var CreateContact = function (contact){
 	};
 
 var UpdateContact = function (contact, id){
-	
-	    console.log("id:"+id);
-		console.log(config.ELOQUA_URL + '/api/rest/2.0/data/contact/' + id);
 		contact.Id = id;
 		console.log(JSON.stringify(contact));
 		var authenticationHeader = "Basic " + new Buffer(config.ELOQUA_USERNAME + ":" + config.ELOQUA_PASSWORD).toString("base64"); 
@@ -104,13 +117,24 @@ var DeleteContact = function (contact){
 
 var CreateRestApiContactPayload = function(contactSobj){
 	
-	var restPayload = {};
+	var restPayload = {fieldValues : []};
 	
 	for (var key in contactSobj) {
 		if (contactSobj.hasOwnProperty(key)) {
 			if(key in fieldmapping.fields && fieldmapping.fields[key] in fieldmapping.StdFieldInternalToRestFieldMap)
 			{
 				restPayload[fieldmapping.StdFieldInternalToRestFieldMap[fieldmapping.fields[key]]] = contactSobj[key] 
+			}
+			else if (key in fieldmapping.fields && 
+					!(fieldmapping.fields[key] in fieldmapping.StdFieldInternalToRestFieldMap) &&
+					fieldmapping.fields[key] in fieldmapping.customFields)
+			{
+				restPayload["fieldValues"].push(
+				{
+					type : "FieldValue",
+					id : fieldmapping.customFields[fieldmapping.fields[key]],
+					value : contactSobj[key]
+				});
 			}
 		}
 	}
