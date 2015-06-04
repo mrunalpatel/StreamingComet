@@ -3,7 +3,6 @@ var bodyParser = require('body-parser');
 var nforce = require('nforce');
 var config = require('./config.js');
 var sfdc = require('./sfdc.js');
-
 var app = express();
 app.use(bodyParser.json());
 var org = nforce.createConnection({
@@ -14,37 +13,47 @@ var org = nforce.createConnection({
   mode: 'single' 
 });
 
+var accs = null;
+
 app.get('/', function (req, res) {
   
   res.send('Hello World!');
-  //Subscribe to Salesforce api
-  org.authenticate({ username: config.SFDC_USERNAME, password: config.SFDC_PASSWORD, securityToken: config.SFDC_SECURITYTOKEN }, function(err, resp) {
-
-  if(err) return console.log(err);
-
-  oauth = resp;
- 
- //Get Topic name from req object and return guid for subscription that php client can use to unsubscribe
-  var accs = org.subscribe({ topic: 'PushTopicFromAPI'}); 
-
-  accs.on('error', function(err) {
-    console.log('subscription error');
-    console.log(err);
-    accs.client.disconnect();
-  });
-
-  accs.on('data', function(data) {
-    console.log(data);
-  });
-
-  });     
+       
 });
 
 app.post('/Subscribe',function(req,res){
 
-        console.log('inside subscribe');
-		   //Subscribe to Salesforce api
+		if(accs!=null){
+			accs.client.disconnect(); //disconnect existing connection
+		}
 		
+		if(req.body.Name != ''){
+			console.log("Subscribing to push topic : "+ req.body.Name);
+				
+		    //Subscribe to Salesforce api
+			org.authenticate({ username: config.SFDC_USERNAME, password: config.SFDC_PASSWORD, securityToken: config.SFDC_SECURITYTOKEN }, function(err, resp) {
+			
+			if(err) return console.log(err);
+			
+			oauth = resp;
+			
+			//Get Topic name from req object and return guid for subscription that php client can use to unsubscribe
+			accs = org.subscribe({ topic: req.body.Name}); 
+			
+			accs.on('error', function(err) {
+				console.log('subscription error');
+				console.log(err);
+				accs.client.disconnect();
+			});
+			
+			accs.on('data', function(data) {
+				console.log(data);
+			});
+			
+			});
+			
+			res.send('Subscribed to : ' + req.body.Name);
+		}
 	}
 );
 
@@ -52,6 +61,7 @@ app.post('/test',function(req,res){
 
 		sfdc.process(req.body)
 		//Subscribe to Salesforce api
+		
 	}
 );
 
