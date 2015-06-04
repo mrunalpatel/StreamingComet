@@ -56,6 +56,7 @@ app.post('/Subscribe',function(req,res){
 			});
 			
 			res.send('Subscribed to : ' + req.body.Name);
+			console.log('Subscribed to : ' + req.body.Name);
 		}
 	}
 );

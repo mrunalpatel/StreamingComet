@@ -23,8 +23,20 @@ var process = function (contactData){
 	
 };
 
+/*var CheckIfContactExist = function(contact){
+	
+	var authenticationHeader = "Basic " + new Buffer(config.ELOQUA_USERNAME + ":" + config.ELOQUA_PASSWORD).toString("base64"); 
+	request.get(
+		{
+			url: config.ELOQUA_URL + '/data/contacts?search=' + contact.emailAddress &count=1&page=1&depth=complete
+		}
+	);
+	
+};*/
+
 var CreateContact = function (contact){
 		var authenticationHeader = "Basic " + new Buffer(config.ELOQUA_USERNAME + ":" + config.ELOQUA_PASSWORD).toString("base64"); 
+		console.log(JSON.stringify(contact));
 		request.post(
 			{
 				url: config.ELOQUA_URL + '/api/rest/2.0/data/contact', 
@@ -51,7 +63,32 @@ var CreateContact = function (contact){
 	};
 
 var UpdateContact = function (contact){
-	console.log(contact);
+	
+		var authenticationHeader = "Basic " + new Buffer(config.ELOQUA_USERNAME + ":" + config.ELOQUA_PASSWORD).toString("base64"); 
+		request.put(
+			{
+				url: config.ELOQUA_URL + '/api/rest/2.0/data/contact/id', 
+				headers : { 
+				            "Authorization" : authenticationHeader,
+							"Content-type": "application/json"
+				          },
+				body: JSON.stringify(contact) 
+			}
+		).on('response',function(response)
+				{
+					if(response.statusCode == '201'){
+						console.log("New contact created in ELOQUA");
+					}
+					
+					//console.log(response.body);
+				}
+		).on('error',function(error)
+				{
+					console.log("error");
+					//console.log(error);
+				}
+			)
+	
 };
 
 var DeleteContact = function (contact){
