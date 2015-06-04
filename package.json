@@ -1,0 +1,21 @@
+{
+  "name": "streamingcomet",
+  "version": "0.0.1",
+  "description": "Real-time Salesforce-Eloqua Integration",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+    },
+  "keywords": [
+    "streaming",
+    "comet",
+    "nforce",
+    "eloqua"
+  ],
+  "author": "Mrunal Patel",
+  "license": "MIT",
+  "dependencies": {
+      "express": "^4.12.4",
+      "nforce": "^1.1.1"
+    }
+}
