@@ -1,13 +1,16 @@
 var express = require('express');
+var bodyParser = require('body-parser');
 var nforce = require('nforce');
 var config = require('./config.js');
+var sfdc = require('./sfdc.js');
 
 var app = express();
+app.use(bodyParser.json());
 var org = nforce.createConnection({
   clientId: config.CLIENT_ID,
   clientSecret: config.CLIENT_SECRET,
   redirectUri: config.CALLBACK_URL + '/oauth/_callback',
-  apiVersion: 'v33.0',
+  apiVersion: 'v32.0',
   mode: 'single' 
 });
 
@@ -42,6 +45,13 @@ app.post('/Subscribe',function(req,res){
         console.log('inside subscribe');
 		   //Subscribe to Salesforce api
 		
+	}
+);
+
+app.post('/test',function(req,res){
+
+		sfdc.process(req.body)
+		//Subscribe to Salesforce api
 	}
 );
 
