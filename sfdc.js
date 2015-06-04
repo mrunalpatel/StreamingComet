@@ -2,37 +2,40 @@ var request = require('request');
 var config = require('./config.js');
 var fieldmapping = require('./fieldmapping.js');
 
+
 var SaveFieldMapping = function(fields){
 	fieldmapping.fields = fields;
 }
 
 var process = function (contactData){
 	
-	if(contactData.event["type"] == 'created'){
-		CreateContact(CreateRestApiContactPayload(contactData.sobject));
-	}
+	var authenticationHeader = "Basic " + new Buffer(config.ELOQUA_USERNAME + ":" + config.ELOQUA_PASSWORD).toString("base64"); 
+	request(
+		{
+			url: config.ELOQUA_URL + '/api/rest/2.0/data/contacts?search=' + contactData.sobject.Email + '&count=1&page=1',
+			headers: {"Authorization" : authenticationHeader }
+		},
+	  function(error,response,body){
+		var b = JSON.parse(body);
+		if(b.total == 0){
+			CreateContact(CreateRestApiContactPayload(contactData.sobject));
+		}
+		else 
+		{
+			UpdateContact(CreateRestApiContactPayload(contactData.sobject),b.elements[0].id);
+		}
+	});
 	
-	if(contactData.event["type"] == 'updated'){
-		UpdateContact(contactData.sobject);
-	}
-	
-	if(contactData.event["type"] == 'deleted'){
-		DeleteContact(contactData.sobject);
-	}
+	//if(contactData.event["type"] == 'deleted'){
+	//	DeleteContact(contactData.sobject);
+	//}
 	
 	
 };
 
-/*var CheckIfContactExist = function(contact){
+var contactExists = function int (contact){
 	
-	var authenticationHeader = "Basic " + new Buffer(config.ELOQUA_USERNAME + ":" + config.ELOQUA_PASSWORD).toString("base64"); 
-	request.get(
-		{
-			url: config.ELOQUA_URL + '/data/contacts?search=' + contact.emailAddress &count=1&page=1&depth=complete
-		}
-	);
-	
-};*/
+};
 
 var CreateContact = function (contact){
 		var authenticationHeader = "Basic " + new Buffer(config.ELOQUA_USERNAME + ":" + config.ELOQUA_PASSWORD).toString("base64"); 
@@ -62,12 +65,16 @@ var CreateContact = function (contact){
 			)
 	};
 
-var UpdateContact = function (contact){
+var UpdateContact = function (contact, id){
 	
+	    console.log("id:"+id);
+		console.log(config.ELOQUA_URL + '/api/rest/2.0/data/contact/' + id);
+		contact.Id = id;
+		console.log(JSON.stringify(contact));
 		var authenticationHeader = "Basic " + new Buffer(config.ELOQUA_USERNAME + ":" + config.ELOQUA_PASSWORD).toString("base64"); 
 		request.put(
 			{
-				url: config.ELOQUA_URL + '/api/rest/2.0/data/contact/id', 
+				url: config.ELOQUA_URL + '/api/rest/2.0/data/contact/' + id, 
 				headers : { 
 				            "Authorization" : authenticationHeader,
 							"Content-type": "application/json"
@@ -76,15 +83,15 @@ var UpdateContact = function (contact){
 			}
 		).on('response',function(response)
 				{
-					if(response.statusCode == '201'){
-						console.log("New contact created in ELOQUA");
+					if(response.statusCode == '200'){
+						console.log("Contact updated in ELOQUA");
+					}else{
+						console.log(response.statusCode);
 					}
-					
-					//console.log(response.body);
 				}
 		).on('error',function(error)
 				{
-					console.log("error");
+					console.log(error);
 					//console.log(error);
 				}
 			)
